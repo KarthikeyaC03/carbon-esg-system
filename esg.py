@@ -1,16 +1,15 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import google.generativeai as genai
+from google import genai
 
 # ------------------------
 # CONFIG
 # ------------------------
 st.set_page_config(page_title="AI ESG Carbon System", layout="wide")
 
-# Secure API key from Streamlit Secrets
-genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-model = genai.GenerativeModel("gemini-1.5-pro")
+client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+MODEL_NAME = "gemini-2.5-flash"
 
 # ------------------------
 # SESSION CONTROL
@@ -61,7 +60,6 @@ if st.button("Generate Assessment Report"):
         st.error("Solar energy cannot exceed total electricity usage.")
         st.stop()
 
-    # Emission Factors
     EF_ELECTRICITY = 0.82
     EF_DIESEL = 2.68
     EF_LPG = 1.51
@@ -79,7 +77,6 @@ if st.button("Generate Assessment Report"):
     emission_per_unit = total / production
     renewable_percentage = (solar / electricity * 100) if electricity > 0 else 0
 
-    # ESG Scoring
     E_score = 85 if emission_per_unit < 5 else 65 if emission_per_unit < 10 else 40
 
     S_score = {
@@ -97,9 +94,6 @@ if st.button("Generate Assessment Report"):
 
     ESG = (E_score * 0.4) + (S_score * 0.3) + (G_score * 0.3)
 
-    # ------------------------
-    # RESULTS
-    # ------------------------
     st.header("📊 Emission Results")
 
     st.write(f"Scope 1 Emissions: {scope1:.2f} kg CO₂")
@@ -118,9 +112,6 @@ if st.button("Generate Assessment Report"):
                  title="Emission Distribution by Source")
     st.plotly_chart(fig)
 
-    # ------------------------
-    # AI ANALYSIS
-    # ------------------------
     st.header("🤖 AI Sustainability Analysis")
 
     prompt = f"""
@@ -142,10 +133,12 @@ if st.button("Generate Assessment Report"):
 
     try:
         with st.spinner("Generating AI insights..."):
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=prompt
+            )
+
         st.write(response.text)
+
     except Exception as e:
-
         st.error(f"AI Error: {str(e)}")
-
-
