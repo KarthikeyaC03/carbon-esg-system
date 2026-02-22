@@ -10,7 +10,7 @@ st.set_page_config(page_title="AI ESG Carbon System", layout="wide")
 
 # Secure API key from Streamlit Secrets
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-1.5-pro")
 
 # ------------------------
 # SESSION CONTROL
@@ -147,4 +147,5 @@ if st.button("Generate Assessment Report"):
     except Exception as e:
 
         st.error(f"AI Error: {str(e)}")
+
 
